@@ -32,6 +32,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/tenrattana/billing-liff:latest
           build-args: |
             VITE_LIFF_ID=2012025842-Hn7vjID5
