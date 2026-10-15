@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import liff from "@line/liff";
 import {
   CheckCircle2,
@@ -32,6 +32,9 @@ function App() {
   const liffState = useLiff();
   const customerState = useCustomer(liffState);
   const [page, setPage] = useState<"select" | "confirm" | "done">("select");
+
+  // เปลี่ยนหน้าแล้วให้เริ่มที่บนสุด ไม่ค้างตำแหน่ง scroll จากหน้าก่อน
+  useEffect(() => window.scrollTo(0, 0), [page]);
 
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
