@@ -77,7 +77,7 @@ export function SelectInvoicesPage({
 
       {invoices.length === 0 ? (
         <p className="rounded-2xl bg-white py-8 text-center text-sm text-slate-400">
-          ไม่มีใบแจ้งหนี้
+          ไม่มีบิลค้างส่ง — ส่งบิลของลูกค้ารายนี้ครบแล้ว
         </p>
       ) : (
         <div className="space-y-2">

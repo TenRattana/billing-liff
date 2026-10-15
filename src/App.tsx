@@ -36,7 +36,10 @@ function App() {
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
   const invoices = customer?.invoices ?? [];
-  const selection = useSelection(invoices.map((invoice) => invoice.invoice_no));
+  const selection = useSelection(
+    invoices.map((invoice) => invoice.invoice_no),
+    "single"
+  );
 
   const selectedInvoices = invoices.filter((invoice) =>
     selection.isSelected(invoice.invoice_no)
