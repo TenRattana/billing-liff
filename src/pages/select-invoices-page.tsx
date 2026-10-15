@@ -88,17 +88,21 @@ export function SelectInvoicesPage({
               onClick={() => selection.toggle(invoice.invoice_no)}
               label={`เลือก ${invoice.invoice_no}`}
               title={invoice.invoice_no}
-              description={`ครบกำหนด ${formatDate(invoice.due_date)}`}
+              description={
+                <>
+                  <span className="block">
+                    วันออกบิล {formatDate(invoice.invoice_date)}
+                  </span>
+                  <span className="block">
+                    ครบกำหนด {formatDate(invoice.due_date)}
+                  </span>
+                </>
+              }
               trailing={
                 <div className="text-right">
                   <p className="font-bold tabular-nums">
                     {formatMoney(invoice.outstanding)}
                   </p>
-                  {invoice.days_overdue > 0 && (
-                    <p className="text-xs font-medium text-red-500">
-                      เกินกำหนด {invoice.days_overdue} วัน
-                    </p>
-                  )}
                 </div>
               }
             />
