@@ -7,6 +7,8 @@
 
 
 @theme inline {
+  --color-line: #06C755;
+  --color-line-dark: #04a345;
   --font-heading: var(--font-sans);
   --font-sans: 'Inter Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
