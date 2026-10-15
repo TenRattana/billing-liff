@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 import liff from "@line/liff";
 
-import { ApiError, fetchCustomer, type Customer } from "@/lib/api";
+import {
+  ApiError,
+  fetchCustomer,
+  SCREEN_PARAMS,
+  type Customer,
+  type ScreenRef,
+} from "@/lib/api";
 import type { LiffState } from "@/hooks/use-liff";
 
 export type CustomerState =
   | { status: "loading" }
   | { status: "no-customer" }
   | { status: "error"; message: string }
-  | { status: "ready"; customer: Customer };
+  | { status: "ready"; customer: Customer; screen: ScreenRef };
 
 export function useCustomer(liffState: LiffState, param = "customer_code") {
   const [state, setState] = useState<CustomerState>({ status: "loading" });
@@ -24,9 +30,15 @@ export function useCustomer(liffState: LiffState, param = "customer_code") {
 
     (async () => {
       // อ่านหลัง init เพราะ LIFF คืน query จริงให้หลัง init เสร็จ
-      const code = new URLSearchParams(window.location.search)
-        .get(param)
-        ?.trim();
+      const query = new URLSearchParams(window.location.search);
+      const code = query.get(param)?.trim();
+      // ส่งเฉพาะตัวที่มีในลิงก์ ให้ bot ตัดสินเองว่าหมดอายุไหม
+      const screen: ScreenRef = Object.fromEntries(
+        SCREEN_PARAMS.flatMap((key) => {
+          const value = query.get(key);
+          return value ? [[key, value]] : [];
+        })
+      );
       if (!code) {
         setState({ status: "no-customer" });
         return;
@@ -48,9 +60,14 @@ export function useCustomer(liffState: LiffState, param = "customer_code") {
       }
 
       try {
-        const customer = await fetchCustomer(code, idToken);
-        if (active) setState({ status: "ready", customer });
+        const customer = await fetchCustomer(code, screen, idToken);
+        if (active) setState({ status: "ready", customer, screen });
       } catch (error) {
+        // 410: bot ส่งข้อความหมดอายุเข้าแชทแล้ว ปิดกลับไปแชทเลย
+        if (error instanceof ApiError && error.status === 410 && liff.isInClient()) {
+          liff.closeWindow();
+          return;
+        }
         if (active) {
           setState({
             status: "error",

@@ -16,7 +16,7 @@ import { StatusPill } from "@/components/status-pill";
 import { useCustomer } from "@/hooks/use-customer";
 import { useLiff } from "@/hooks/use-liff";
 import { useSelection } from "@/hooks/use-selection";
-import { submitSelection } from "@/lib/api";
+import { ApiError, submitSelection } from "@/lib/api";
 import { ConfirmInvoicesPage } from "@/pages/confirm-invoices-page";
 import { SelectInvoicesPage } from "@/pages/select-invoices-page";
 
@@ -38,6 +38,7 @@ function App() {
 
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
+  const screen = customerState.status === "ready" ? customerState.screen : {};
   const invoices = customer?.invoices ?? [];
   const selection = useSelection(
     invoices.map((invoice) => invoice.invoice_no),
@@ -121,11 +122,20 @@ function App() {
             onConfirm={async () => {
               const idToken = liff.getIDToken();
               if (!idToken) throw new Error("ไม่ได้รับ ID token กรุณาเปิดหน้านี้ใหม่");
-              await submitSelection(
-                customer.customer_code,
-                selectedInvoices.map((invoice) => invoice.invoice_no),
-                idToken
-              );
+              try {
+                await submitSelection(
+                  customer.customer_code,
+                  selectedInvoices.map((invoice) => invoice.invoice_no),
+                  screen,
+                  idToken
+                );
+              } catch (error) {
+                // 410: หน้าถูกแทนที่ระหว่างเปิด — โชว์ข้อความให้เห็นแป๊บหนึ่งแล้วปิด
+                if (error instanceof ApiError && error.status === 410 && liff.isInClient()) {
+                  setTimeout(() => liff.closeWindow(), 2000);
+                }
+                throw error;
+              }
               // ปิด LIFF กลับไปแชท ให้ผู้ใช้เห็นข้อความขอรูปจาก bot ทันที
               if (liff.isInClient()) liff.closeWindow();
               else setPage("done");

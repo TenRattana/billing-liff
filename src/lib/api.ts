@@ -15,6 +15,11 @@ export type Customer = {
   invoices: Invoice[];
 };
 
+/** flow_id, screen_step, screen_id จากลิงก์ลูกค้า — bot ใช้ตรวจว่าหน้ารายการลูกค้ายังไม่หมดอายุ */
+export type ScreenRef = Record<string, string>;
+
+export const SCREEN_PARAMS = ["flow_id", "screen_step", "screen_id"] as const;
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -49,20 +54,23 @@ function parseCustomer(data: unknown): Customer {
 
 export async function fetchCustomer(
   customerCode: string,
+  screen: ScreenRef,
   idToken: string
 ): Promise<Customer> {
-  const res = await fetch(
-    `${API_URL}/api/liff/customer?customer_code=${encodeURIComponent(customerCode)}`,
-    { headers: { Authorization: `Bearer ${idToken}` } }
-  );
+  const query = new URLSearchParams({ customer_code: customerCode, ...screen });
+  const res = await fetch(`${API_URL}/api/liff/customer?${query}`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
 
   if (!res.ok) {
     const message =
-      res.status === 404
-        ? "ไม่พบข้อมูลลูกค้า"
-        : res.status === 401 || res.status === 403
-          ? "ไม่มีสิทธิ์เข้าถึงข้อมูลลูกค้านี้"
-          : "โหลดข้อมูลไม่สำเร็จ";
+      res.status === 410
+        ? "รายการนี้หมดอายุแล้ว"
+        : res.status === 404
+          ? "ไม่พบข้อมูลลูกค้า"
+          : res.status === 401 || res.status === 403
+            ? "ไม่มีสิทธิ์เข้าถึงข้อมูลลูกค้านี้"
+            : "โหลดข้อมูลไม่สำเร็จ";
     throw new ApiError(res.status, message);
   }
 
@@ -73,6 +81,7 @@ export async function fetchCustomer(
 export async function submitSelection(
   customerCode: string,
   invoiceNos: string[],
+  screen: ScreenRef,
   idToken: string
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/liff/selection`, {
@@ -81,7 +90,11 @@ export async function submitSelection(
       Authorization: `Bearer ${idToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ customer_code: customerCode, invoice_nos: invoiceNos }),
+    body: JSON.stringify({
+      customer_code: customerCode,
+      invoice_nos: invoiceNos,
+      ...screen,
+    }),
   });
 
   if (!res.ok) {
@@ -95,15 +108,17 @@ export async function submitSelection(
       typeof detail === "string" ? detail.replace(/^Already sent:\s*/, "") : "";
 
     const message =
-      res.status === 409
-        ? `มีบิลที่ถูกส่งไปแล้ว: ${sentNos} กรุณากลับไปเลือกใหม่`
-        : res.status === 404
-          ? "ไม่พบบิลที่เลือก กรุณาเปิดหน้านี้ใหม่"
-          : res.status === 401 || res.status === 403
-            ? "ไม่มีสิทธิ์ส่งบิลนี้"
-            : res.status === 502
-              ? "บันทึกรายการแล้ว แต่ส่งหน้าอัปโหลดรูปเข้าแชทไม่ได้ กรุณากด “เช็คงานค้าง” ในแชท"
-              : "ส่งรายการไม่สำเร็จ"; // 400, 422, 5xx
+      res.status === 410
+        ? "รายการนี้หมดอายุแล้ว" // หน้ารายการลูกค้าถูกแทนที่ระหว่างเปิด LIFF
+        : res.status === 409
+          ? `มีบิลที่ถูกส่งไปแล้ว: ${sentNos} กรุณากลับไปเลือกใหม่`
+          : res.status === 404
+            ? "ไม่พบบิลที่เลือก กรุณาเปิดหน้านี้ใหม่"
+            : res.status === 401 || res.status === 403
+              ? "ไม่มีสิทธิ์ส่งบิลนี้"
+              : res.status === 502
+                ? "บันทึกรายการแล้ว แต่ส่งหน้าอัปโหลดรูปเข้าแชทไม่ได้ กรุณากด “เช็คงานค้าง” ในแชท"
+                : "ส่งรายการไม่สำเร็จ"; // 400, 422, 5xx
     throw new ApiError(res.status, message);
   }
 }
