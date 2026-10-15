@@ -1,4 +1,5 @@
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, CheckCircle2, CircleAlert, LoaderCircle } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { ActionButton } from "@/components/action-button";
@@ -10,7 +11,8 @@ import { formatDate, formatMoney } from "@/lib/format";
 type ConfirmInvoicesPageProps = {
   invoices: Invoice[];
   total: number;
-  onConfirm: () => void;
+  /** throw Error เพื่อแสดงข้อความ error ใต้การ์ด */
+  onConfirm: () => Promise<void>;
   onBack: () => void;
 };
 
@@ -20,6 +22,21 @@ export function ConfirmInvoicesPage({
   onConfirm,
   onBack,
 }: ConfirmInvoicesPageProps) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const confirm = async () => {
+    setPending(true);
+    setError(null);
+    try {
+      await onConfirm();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ส่งรายการไม่สำเร็จ");
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <Panel>
       <PanelContent className="space-y-5">
@@ -59,9 +76,19 @@ export function ConfirmInvoicesPage({
           <TotalRow amount={total} className="items-center" />
         </div>
 
+        {error && (
+          <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-600">
+            <CircleAlert className="size-4 shrink-0" />
+            {error}
+          </p>
+        )}
+
         <div className="space-y-2">
-          <ActionButton onClick={onConfirm}>ยืนยันรายการ (Demo)</ActionButton>
-          <ActionButton tone="secondary" onClick={onBack}>
+          <ActionButton disabled={pending} onClick={confirm}>
+            {pending && <LoaderCircle className="animate-spin" data-icon="inline-start" />}
+            {pending ? "กำลังส่ง..." : "ยืนยันรายการ"}
+          </ActionButton>
+          <ActionButton tone="secondary" disabled={pending} onClick={onBack}>
             <ArrowLeft data-icon="inline-start" />
             กลับไปแก้ไข
           </ActionButton>

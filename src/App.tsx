@@ -1,5 +1,7 @@
 import { useState } from "react";
+import liff from "@line/liff";
 import {
+  CheckCircle2,
   CircleAlert,
   LoaderCircle,
   ReceiptText,
@@ -14,7 +16,7 @@ import { StatusPill } from "@/components/status-pill";
 import { useCustomer } from "@/hooks/use-customer";
 import { useLiff } from "@/hooks/use-liff";
 import { useSelection } from "@/hooks/use-selection";
-import { formatMoney } from "@/lib/format";
+import { submitSelection } from "@/lib/api";
 import { ConfirmInvoicesPage } from "@/pages/confirm-invoices-page";
 import { SelectInvoicesPage } from "@/pages/select-invoices-page";
 
@@ -29,7 +31,7 @@ const LIFF_STATUS = {
 function App() {
   const liffState = useLiff();
   const customerState = useCustomer(liffState);
-  const [page, setPage] = useState<"select" | "confirm">("select");
+  const [page, setPage] = useState<"select" | "confirm" | "done">("select");
 
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
@@ -98,16 +100,29 @@ function App() {
             total={total}
             onNext={() => setPage("confirm")}
           />
+        ) : page === "done" ? (
+          <StateCard
+            tone="success"
+            icon={<CheckCircle2 />}
+            title="ส่งรายการแล้ว"
+            description="กลับไปที่แชท LINE เพื่ออัปโหลดรูป"
+          />
         ) : (
           <ConfirmInvoicesPage
             invoices={selectedInvoices}
             total={total}
             onBack={() => setPage("select")}
-            onConfirm={() => {
-              // Demo only: ยังไม่ส่งข้อมูลไป Backend
-              window.alert(
-                `รายการที่เลือก:\n${selection.selected.join("\n")}\n\nยอดรวม ${formatMoney(total)}`
+            onConfirm={async () => {
+              const idToken = liff.getIDToken();
+              if (!idToken) throw new Error("ไม่ได้รับ ID token กรุณาเปิดหน้านี้ใหม่");
+              await submitSelection(
+                customer.customer_code,
+                selectedInvoices.map((invoice) => invoice.invoice_no),
+                idToken
               );
+              // ปิด LIFF กลับไปแชท ให้ผู้ใช้เห็นข้อความขอรูปจาก bot ทันที
+              if (liff.isInClient()) liff.closeWindow();
+              else setPage("done");
             }}
           />
         )}

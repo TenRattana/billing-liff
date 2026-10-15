@@ -68,3 +68,42 @@ export async function fetchCustomer(
 
   return parseCustomer(await res.json());
 }
+
+/** ส่งบิลที่เลือกไปให้ bot -> bot ตั้ง session ไปขั้นอัปโหลดรูป แล้ว push ข้อความขอรูปในแชท */
+export async function submitSelection(
+  customerCode: string,
+  invoiceNos: string[],
+  idToken: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/liff/selection`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ customer_code: customerCode, invoice_nos: invoiceNos }),
+  });
+
+  if (!res.ok) {
+    // detail เป็น string ยกเว้น 422 ของ FastAPI ที่เป็น list
+    const detail = await res
+      .json()
+      .then((body: { detail?: unknown }) => body.detail)
+      .catch(() => undefined);
+    // 409: "Already sent: INV-1, INV-2"
+    const sentNos =
+      typeof detail === "string" ? detail.replace(/^Already sent:\s*/, "") : "";
+
+    const message =
+      res.status === 409
+        ? `มีบิลที่ถูกส่งไปแล้ว: ${sentNos} กรุณากลับไปเลือกใหม่`
+        : res.status === 404
+          ? "ไม่พบบิลที่เลือก กรุณาเปิดหน้านี้ใหม่"
+          : res.status === 401 || res.status === 403
+            ? "ไม่มีสิทธิ์ส่งบิลนี้"
+            : res.status === 502
+              ? "บันทึกรายการแล้ว แต่ส่งหน้าอัปโหลดรูปเข้าแชทไม่ได้ กรุณากด “เช็คงานค้าง” ในแชท"
+              : "ส่งรายการไม่สำเร็จ"; // 400, 422, 5xx
+    throw new ApiError(res.status, message);
+  }
+}
