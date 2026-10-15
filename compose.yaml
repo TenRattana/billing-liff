@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_LIFF_ID: "2012025842-Hn7vjID5"
 
     image: billing-liff:latest
     container_name: billing-liff

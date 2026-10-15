@@ -33,5 +33,3 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/tenrattana/billing-liff:latest
-          build-args: |
-            VITE_LIFF_ID=2012025842-Hn7vjID5
