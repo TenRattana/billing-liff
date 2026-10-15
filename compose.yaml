@@ -1,0 +1,21 @@
+services:
+  billing-liff:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_LIFF_ID: "2012025842-Hn7vjID5"
+
+    image: billing-liff:latest
+    container_name: billing-liff
+    restart: unless-stopped
+
+    expose:
+      - "80"
+
+    networks:
+      - nginx-proxy
+
+networks:
+  nginx-proxy:
+    external: true
