@@ -42,6 +42,7 @@ export function ConfirmInvoicesPage({
               <div className="min-w-0">
                 <p className="font-medium">{invoice.invoice_no}</p>
                 <p className="truncate text-xs text-slate-400">
+                  วันออกบิล {formatDate(invoice.invoice_date)}
                   ครบกำหนด {formatDate(invoice.due_date)}
                 </p>
               </div>
