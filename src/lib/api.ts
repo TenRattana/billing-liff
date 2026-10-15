@@ -1,13 +1,17 @@
-// ponytail: shape เดาไว้ก่อน หลังบ้านยังไม่มี — ถ้า response จริงต่างจากนี้ แก้ type + parseCustomer ที่ไฟล์นี้ไฟล์เดียว
+// ตรงกับ GET /api/liff/customer ใน line-billing-bot (app/routes/liff.py) — ใส่เฉพาะ field ที่หน้าเว็บใช้
 export type Invoice = {
-  id: string;
+  invoice_no: string;
+  invoice_date: string; // YYYY-MM-DD
+  due_date: string; // YYYY-MM-DD
   amount: number;
-  date: string;
+  outstanding: number; // ยอดค้างชำระ
+  days_overdue: number;
 };
 
 export type Customer = {
   customer_code: string;
   customer_name: string;
+  total_outstanding: number;
   invoices: Invoice[];
 };
 
@@ -17,7 +21,8 @@ export class ApiError extends Error {
   }
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? "";
+// bot อยู่หลัง /line-oa-test/ บน domain เดียวกัน (nginx ตัด prefix ให้)
+const API_URL = import.meta.env.VITE_API_URL ?? "/line-oa-test";
 
 function parseCustomer(data: unknown): Customer {
   const d = data as Partial<Customer> | null;
@@ -25,12 +30,16 @@ function parseCustomer(data: unknown): Customer {
     !d ||
     typeof d.customer_code !== "string" ||
     typeof d.customer_name !== "string" ||
+    typeof d.total_outstanding !== "number" ||
     !Array.isArray(d.invoices) ||
     !d.invoices.every(
       (i) =>
-        typeof i?.id === "string" &&
+        typeof i?.invoice_no === "string" &&
+        typeof i.invoice_date === "string" &&
+        typeof i.due_date === "string" &&
         typeof i.amount === "number" &&
-        typeof i.date === "string"
+        typeof i.outstanding === "number" &&
+        typeof i.days_overdue === "number"
     )
   ) {
     throw new ApiError(0, "รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง");

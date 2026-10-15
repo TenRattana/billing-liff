@@ -11,7 +11,7 @@ import { SelectableCard } from "@/components/selectable-card";
 import { TotalRow } from "@/components/total-row";
 import type { useSelection } from "@/hooks/use-selection";
 import type { Customer } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 
 const MODE_OPTIONS = [
   { value: "single", label: "เลือกบิลเดียว" },
@@ -39,7 +39,7 @@ export function SelectInvoicesPage({
         <PanelContent className="space-y-4">
           <ProfileCard
             title={customer.customer_name}
-            description={`รหัสลูกค้า ${customer.customer_code}`}
+            description={`รหัสลูกค้า ${customer.customer_code} · ค้างชำระ ${formatMoney(customer.total_outstanding)}`}
           />
 
           <div>
@@ -83,16 +83,23 @@ export function SelectInvoicesPage({
         <div className="space-y-2">
           {invoices.map((invoice) => (
             <SelectableCard
-              key={invoice.id}
-              checked={selection.isSelected(invoice.id)}
-              onClick={() => selection.toggle(invoice.id)}
-              label={`เลือก ${invoice.id}`}
-              title={invoice.id}
-              description={`วันที่ ${invoice.date}`}
+              key={invoice.invoice_no}
+              checked={selection.isSelected(invoice.invoice_no)}
+              onClick={() => selection.toggle(invoice.invoice_no)}
+              label={`เลือก ${invoice.invoice_no}`}
+              title={invoice.invoice_no}
+              description={`ครบกำหนด ${formatDate(invoice.due_date)}`}
               trailing={
-                <p className="font-bold tabular-nums">
-                  {formatMoney(invoice.amount)}
-                </p>
+                <div className="text-right">
+                  <p className="font-bold tabular-nums">
+                    {formatMoney(invoice.outstanding)}
+                  </p>
+                  {invoice.days_overdue > 0 && (
+                    <p className="text-xs font-medium text-red-500">
+                      เกินกำหนด {invoice.days_overdue} วัน
+                    </p>
+                  )}
+                </div>
               }
             />
           ))}

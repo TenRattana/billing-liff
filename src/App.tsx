@@ -34,12 +34,12 @@ function App() {
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
   const invoices = customer?.invoices ?? [];
-  const selection = useSelection(invoices.map((invoice) => invoice.id));
+  const selection = useSelection(invoices.map((invoice) => invoice.invoice_no));
 
   const selectedInvoices = invoices.filter((invoice) =>
-    selection.isSelected(invoice.id)
+    selection.isSelected(invoice.invoice_no)
   );
-  const total = selectedInvoices.reduce((sum, i) => sum + i.amount, 0);
+  const total = selectedInvoices.reduce((sum, i) => sum + i.outstanding, 0);
 
   const liffStatus = LIFF_STATUS[liffState.status];
 

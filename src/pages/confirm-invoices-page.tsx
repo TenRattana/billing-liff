@@ -5,7 +5,7 @@ import { ActionButton } from "@/components/action-button";
 import { Panel, PanelContent } from "@/components/panel";
 import { TotalRow } from "@/components/total-row";
 import type { Invoice } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 
 type ConfirmInvoicesPageProps = {
   invoices: Invoice[];
@@ -36,17 +36,17 @@ export function ConfirmInvoicesPage({
         <div className="space-y-2 rounded-xl bg-slate-50 p-4">
           {invoices.map((invoice) => (
             <div
-              key={invoice.id}
+              key={invoice.invoice_no}
               className="flex items-center justify-between gap-3 text-sm"
             >
               <div className="min-w-0">
-                <p className="font-medium">{invoice.id}</p>
+                <p className="font-medium">{invoice.invoice_no}</p>
                 <p className="truncate text-xs text-slate-400">
-                  วันที่ {invoice.date}
+                  ครบกำหนด {formatDate(invoice.due_date)}
                 </p>
               </div>
               <span className="tabular-nums">
-                {formatMoney(invoice.amount)}
+                {formatMoney(invoice.outstanding)}
               </span>
             </div>
           ))}
