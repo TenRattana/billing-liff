@@ -4,10 +4,8 @@ export const formatMoney = (value: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-/** "2026-08-01" -> "1 ส.ค. 2569" */
+/** "2026-08-01" -> "01-08-2026" (รูปแบบอื่นคืนค่าเดิม) */
 export const formatDate = (iso: string) => {
-  const date = new Date(`${iso}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? iso
-    : date.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return match ? `${match[3]}-${match[2]}-${match[1]}` : iso;
 };
