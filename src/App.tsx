@@ -56,7 +56,7 @@ function App() {
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <AppHeader
         icon={<ReceiptText />}
-        title="LINE Billing"
+        title="ส่งบิล"
         subtitle="ระบบจัดการใบแจ้งหนี้"
         action={
           <StatusPill

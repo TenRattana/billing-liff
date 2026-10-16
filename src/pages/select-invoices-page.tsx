@@ -14,8 +14,8 @@ import type { Customer } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/format";
 
 const MODE_OPTIONS = [
-  { value: "single", label: "เลือกบิลเดียว" },
-  { value: "multiple", label: "เลือกหลายบิล" },
+  { value: "single", label: "1 Invoice" },
+  { value: "multiple", label: "> Invoice" },
 ] as const;
 
 type SelectInvoicesPageProps = {
@@ -43,7 +43,7 @@ export function SelectInvoicesPage({
           />
 
           <div>
-            <h2 className="text-xl font-bold">เลือกบิลที่ต้องการส่ง</h2>
+            <h2 className="text-xl font-bold">เลือกชนิดที่ต้องการส่ง</h2>
             <p className="mt-0.5 text-sm text-slate-500">
               เลือกรายการใบแจ้งหนี้เพื่อดำเนินการต่อ
             </p>
