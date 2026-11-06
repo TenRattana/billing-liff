@@ -49,7 +49,16 @@ function parseCustomer(data: unknown): Customer {
   ) {
     throw new ApiError(0, "รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง");
   }
-  return d as Customer;
+  const customer = d as Customer;
+  return {
+    ...customer,
+    // เก่าสุดก่อน: วันที่เป็น YYYY-MM-DD เทียบเป็นข้อความได้ วันเดียวกันเรียงตามเลขบิล
+    invoices: [...customer.invoices].sort(
+      (a, b) =>
+        a.invoice_date.localeCompare(b.invoice_date) ||
+        a.invoice_no.localeCompare(b.invoice_no)
+    ),
+  };
 }
 
 export async function fetchCustomer(
