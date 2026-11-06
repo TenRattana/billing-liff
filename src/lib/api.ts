@@ -26,8 +26,15 @@ export class ApiError extends Error {
   }
 }
 
-// bot อยู่หลัง /line-oa-test/ บน domain เดียวกัน (nginx ตัด prefix ให้)
-const API_URL = import.meta.env.VITE_API_URL ?? "/line-oa-test";
+// bot อยู่หลัง prefix บน domain เดียวกัน (nginx ตัด prefix ให้) — LIFF ตัวนี้ใช้ร่วมกันหลาย OA
+// ลิงก์จาก bot บอกว่าเรียก bot ตัวไหน รับเฉพาะค่าที่รู้จัก เพราะ ID token จะถูกส่งไปที่ path นี้
+const API_PATHS = ["/line-oa", "/line-oa-test"];
+
+function apiUrl(): string {
+  const path = new URLSearchParams(window.location.search).get("api");
+  if (path && API_PATHS.includes(path)) return path;
+  return import.meta.env.VITE_API_URL ?? "/line-oa-test";
+}
 
 function parseCustomer(data: unknown): Customer {
   const d = data as Partial<Customer> | null;
@@ -67,7 +74,7 @@ export async function fetchCustomer(
   idToken: string
 ): Promise<Customer> {
   const query = new URLSearchParams({ customer_code: customerCode, ...screen });
-  const res = await fetch(`${API_URL}/api/liff/customer?${query}`, {
+  const res = await fetch(`${apiUrl()}/api/liff/customer?${query}`, {
     headers: { Authorization: `Bearer ${idToken}` },
   });
 
@@ -93,7 +100,7 @@ export async function submitSelection(
   screen: ScreenRef,
   idToken: string
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/api/liff/selection`, {
+  const res = await fetch(`${apiUrl()}/api/liff/selection`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${idToken}`,

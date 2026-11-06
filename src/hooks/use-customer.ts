@@ -63,10 +63,9 @@ export function useCustomer(liffState: LiffState, param = "customer_code") {
         const customer = await fetchCustomer(code, screen, idToken);
         if (active) setState({ status: "ready", customer, screen });
       } catch (error) {
-        // 410: bot ส่งข้อความหมดอายุเข้าแชทแล้ว ปิดกลับไปแชทเลย
+        // 410: แสดงข้อความให้อ่านก่อนแล้วค่อยปิดกลับไปแชท
         if (error instanceof ApiError && error.status === 410 && liff.isInClient()) {
-          liff.closeWindow();
-          return;
+          setTimeout(() => liff.closeWindow(), 2000);
         }
         if (active) {
           setState({
