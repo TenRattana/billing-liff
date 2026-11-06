@@ -15,7 +15,7 @@ import { formatDate, formatMoney } from "@/lib/format";
 
 const MODE_OPTIONS = [
   { value: "single", label: "1 Invoice" },
-  { value: "multiple", label: "> Invoice" },
+  { value: "multiple", label: "> 1 Invoice" },
 ] as const;
 
 type SelectInvoicesPageProps = {
