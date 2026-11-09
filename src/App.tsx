@@ -34,7 +34,11 @@ function App() {
   const [page, setPage] = useState<"select" | "confirm" | "done">("select");
 
   // เปลี่ยนหน้าแล้วให้เริ่มที่บนสุด ไม่ค้างตำแหน่ง scroll จากหน้าก่อน
-  useEffect(() => window.scrollTo(0, 0), [page]);
+  // ปีกกา: ห้ามคืนค่าของ scrollTo — React ถือค่าที่คืนเป็นฟังก์ชันเก็บกวาด และใน LINE บน Android
+  // scrollTo คืนค่าที่ไม่ใช่ฟังก์ชัน ทำให้ล้มตอนเปลี่ยนหน้า ("l is not a function", จอขาว)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
 
   const customer =
     customerState.status === "ready" ? customerState.customer : null;
